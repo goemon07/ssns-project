@@ -1,3 +1,7 @@
+# Installation
+
+  - `sudo apt-get install build-essential binutils-msp430 gcc-msp430 msp430-libc binutils-avr gcc-avr gdb-avr avr-libc avrdude binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi ant libncurses5-dev doxygen srecord git openjdk-11-jdk`
+
 # Instructions
 
 The following make targets are useful for development:
