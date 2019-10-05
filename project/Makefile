@@ -5,8 +5,8 @@ CONTIKI = ..
 TTY=/dev/ttyACM0
 
 deploy: all
-	avr-objcopy -v -O ihex -R .eeprom -R .fuse fubar.arduino fubar.hex
-	avrdude -p m328p -P $(TTY) -c arduino -b 115200 -U flash:w:fubar.hex
+	avr-objcopy -v -O ihex -R .eeprom -R .fuse fubar.arduino fubar.ihex
+	avrdude -p m328p -P $(TTY) -c arduino -b 115200 -U flash:w:fubar.ihex
 
 tail:
 	stty -F $(TTY) cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts
