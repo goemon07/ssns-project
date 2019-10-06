@@ -2,7 +2,8 @@ CONTIKI_PROJECT = fubar
 TARGET = arduino
 ARDUINO_MODEL=Uno
 CONTIKI = ..
-TTY=/dev/ttyACM0
+TTY = ${ARDUINO_TTY}
+TTY ?= /dev/ttyACM0
 
 deploy: all
 	avr-objcopy -v -O ihex -R .eeprom -R .fuse fubar.arduino fubar.ihex
