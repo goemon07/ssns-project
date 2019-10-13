@@ -1,3 +1,0 @@
-[submodule "flask-argon-dashboard"]
-	path = flask-argon-dashboard
-	url = git@github.com:goemon07/flask-argon-dashboard.git
