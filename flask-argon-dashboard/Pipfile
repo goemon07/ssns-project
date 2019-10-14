@@ -9,16 +9,15 @@ verify_ssl = true
 flask = "*"
 flask-sqlalchemy = "*"
 flask-bcrypt = "*"
-flask-wtf = "*"
 frozen-flask = "*"
 bcrypt = "*"
 click = "*"
 jinja2 = "*"
 sqlalchemy = "*"
 werkzeug = "*"
-wtforms = "*"
 flask-restful = "*"
 flask-login = "*"
+flask-api = "*"
 
 [requires]
 python_version = "3.7"
