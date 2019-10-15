@@ -1,4 +1,4 @@
-\documentclass[]{scrreprt}
+\documentclass[]{scrartcl}
 
 
 % Title Page
@@ -8,7 +8,6 @@
 \begin{document}
 \maketitle
 
-\part{System components}
 \section{Dashboard}
 \subsection{API}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
@@ -21,9 +20,8 @@ Registers a sensor node in the database using the Xbee serial number as the uniq
 
 \subsubsection*{Request parameters}
 \begin{description}
-\item[serial] Xbee serial number (unique node identifier)
+\item[serial] Xbee serial number in HEX (unique node identifier)
 \item[publicKey] ECC public key generated on the node
-\item[signature] ECC-DSA signature over 'serial,publicKey'
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -36,31 +34,6 @@ No content.
 \item[401 Unauthenticated] Invalid signature
 \end{description}
 
-\subsubsection{Hello}
-Registers the node as active and requests an encryption key to use for the current session.
-
-\subsubsection*{URL}
-\texttt{POST /api/v1/node/hello}
-
-\subsubsection*{Request parameters}
-\begin{description}
-\item[serial] Xbee serial number (unique node identifier)
-\item[cnonce] Nonce for the request
-\item[signature] ECC-DSA signature over 'serial,cnonce'
-\end{description}
-
-\subsubsection*{Response parameters}
-\begin{description}
-\item[key] Secret key, encrypted with node's public key
-\end{description}
-
-\subsubsection*{Status codes}
-\begin{description}
-\item[200 OK] Handshake successful
-\item[400 Invalid request] Invalid nonce
-\item[401 Unauthenticated] Invalid serial or signature
-\end{description}
-
 \subsubsection{Store measurement}
 Stores a measurement for a given node.
 
@@ -70,9 +43,9 @@ Stores a measurement for a given node.
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number
-\item[measurement[n].type] Sensor type
-\item[measurement[n].value] Measurement
-\item[signature] ECC-DSA signature over 'serial,measurement[0].type,measurement[0].value,...,measurement[n].type,measurement[n].value'
+\item[type] Sensor type (uint8)
+\item[value] Sensor value as float
+\item[signature] ECC-DSA signature over \texttt{serial,type,value}
 \end{description}
 
 \subsubsection*{Response parameters}
