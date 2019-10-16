@@ -36,14 +36,23 @@ class RoutingServer:
         print(dev.get_64bit_addr(), 'joined the network')
 
     def data_received(self, msg: XBeeMessage):
-        type = msg.data[:4].decode('UTF-8')
-        print(msg.remote_device.get_64bit_addr(), 'sent', type)
-        if type == 'HELO':
-            self.dev.send_data(msg.remote_device, b'HELO')
-        elif type == 'DATA':
-            data = struct.unpack('fffff', msg.data[4:])
-            print(data)
-            pass
+        try:
+            type = msg.data[:4].decode('UTF-8')
+            if type == 'HELO':
+                self.dev.send_data(msg.remote_device, b'HELO')
+                print(msg.remote_device.get_64bit_addr(), 'has been registered')
+            elif type == 'DATA':
+                data = struct.unpack('fffff', msg.data[4:])
+                print(msg.remote_device.get_64bit_addr(), data)
+                pass
+            elif type == 'LOG_':
+                print(msg.remote_device.get_64bit_addr(), msg.data[4:].decode('UTF-8'))
+            elif type == 'BOOP':
+                print(msg.remote_device.get_64bit_addr(), 'is alive (but has no data)')
+            else:
+                print('Unknown message type:', type)
+        except BaseException as e:
+            print(e)
 
 
 if __name__ == '__main__':
