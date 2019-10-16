@@ -21,7 +21,6 @@ Registers a sensor node in the database using the Xbee serial number as the uniq
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number in HEX (unique node identifier)
-\item[publicKey] ECC public key generated on the node
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -31,7 +30,6 @@ No content.
 \begin{description}
 \item[204 No content] Registration successful
 \item[400 Invalid request] Invalid key or duplicate serial number
-\item[401 Unauthenticated] Invalid signature
 \end{description}
 
 \subsubsection{Store measurement}
@@ -45,7 +43,6 @@ Stores a measurement for a given node.
 \item[serial] Xbee serial number
 \item[type] Sensor type (uint8)
 \item[value] Sensor value as float
-\item[signature] ECC-DSA signature over \texttt{serial,type,value}
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -55,8 +52,28 @@ No content.
 \begin{description}
 \item[204 No content] Measurement recorded successful
 \item[400 Invalid request] Invalid sensor type
-\item[401 Unauthenticated] Invalid serial or signature
 \end{description}
 
+\subsubsection{Read measurements}
+Reads measurement for display in chart.
+
+\subsubsection*{URL}
+\texttt{GET /api/v1/measurement}
+
+\subsubsection*{Request parameters}
+\begin{description}
+\item[token] Token used for paging (optional)
+\end{description}
+
+\subsubsection*{Response parameters}
+\begin{description}
+\item[data] All data since the last token (in arbitrary format)
+\item[token] Token for the next call
+\end{description}
+
+\subsubsection*{Status codes}
+\begin{description}
+\item[200 OK] Measurements
+\end{description}
 
 \end{document}
