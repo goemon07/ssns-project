@@ -19,7 +19,7 @@ app.config.from_object('app.configuration.Config')
 db = SQLAlchemy  (app) # flask-sqlalchemy
 bc = Bcrypt      (app) # flask-bcrypt
 
-from app import views, models
+from app import views
 from app.restapi.stats import ApiStats 
 
 # Inject REST api 

@@ -1,11 +1,14 @@
 # -*- encoding: utf-8 -*-
-from flask                  import render_template, request, url_for, redirect, send_from_directory
+from flask                  import render_template, request, url_for, redirect, jsonify, send_from_directory
 from werkzeug.exceptions    import HTTPException, NotFound, abort
 from flask_api              import status
 
 import os, logging 
 
-from app        import app, db, bc
+from app                import app, db, bc
+from app.models         import Node, Measurement
+from flask_sqlalchemy   import SQLAlchemy, inspect
+from datetime           import datetime
 
 @app.route('/sitemap.xml')
 def sitemap():
@@ -59,68 +62,63 @@ def index(path):
 #####################################################
 
 # expected fields:
-#   serial:     Xbee serial number
-#   publicKey:  ECC public key generated on the node
-#   signature:  ECC-DSA signature over 'serial,publicKey' 
+#   serial:     Xbee serial number in HEX
 @app.route('/api/v1/node/register', methods = ['POST'])
-def registerNewNode():
+def register_new_node():
     content = request.json 
-    return {}, status.HTTP_204_NO_CONTENT
-    res = {
-        "status": 400,
-        "message": "Invalid key or duplicate serial number."
-    }
-    return res, status.HTTP_400_BAD_REQUEST
-    res = {
-        "status": 401,
-        "message": "Invalid signature."
-    }
-    return res, status.HTTP_401_UNAUTHORIZED
-
+    try:
+        new_node = Node(serial=content['serial'])
+        db.session.add(new_node)
+        db.session.commit()
+        return {}, status.HTTP_204_NO_CONTENT
+    except:
+        res = {
+            "status": 400,
+            "message": "Invalid key or duplicate serial number."
+        }
+        return res, status.HTTP_400_BAD_REQUEST
 
 
 
 # expected fields:
 #   serial:     Xbee serial number
-#   cnonce:     Nonce for the request
-#   signature:  ECC-DSA signature over 'serial,cnonce' 
-@app.route('/api/v1/node/hello', methods = ['POST'])
-def initNode():
-    content = request.json 
-    res = {
-        "status": 200,
-        "message": "Handshake successful."
-    }
-    return res, status.HTTP_200_OK
-    res = {
-        "status": 400,
-        "message": "Invalid nonce."
-    }
-    return res, status.HTTP_400_BAD_REQUEST
-    res = {
-        "status": 401,
-        "message": "Invalid serial or signature."
-    }
-    return res, status.HTTP_401_UNAUTHORIZED
-
-
-
-
-# expected fields:
-#   serial:     Xbee serial number
-#   measurement[n .type]:  Sensor type
-#   measurement[n .value]:  Measurement
+#   type:  Sensor type
+#   value:  Measurement
 @app.route('/api/v1/measurement', methods = ['POST'])
-def insertMeasurement():
-    content = request.json 
-    return {}, status.HTTP_204_NO_CONTENT
-    res = {
-        "status": 400,
-        "message": "Invalid sensor type."
-    }
-    return res, status.HTTP_400_BAD_REQUEST
-    res = {
-        "status": 401,
-        "message": "Invalid serial or signature."
-    }
-    return res, status.HTTP_401_UNAUTHORIZED
+def insert_measurement():
+    try:
+        content = request.json
+        new_meas = Measurement(node_serial=content['serial'], timestamp=datetime.now(), sensor=content['type'], value=content['value'])
+        db.session.add(new_meas)
+        db.session.commit()
+        return {}, status.HTTP_204_NO_CONTENT
+    except:
+        res = {
+            "status": 400,
+            "message": "Invalid sensor type or not existing sensor serial."
+        }
+        return res, status.HTTP_400_BAD_REQUEST
+
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs}
+
+# expected fields:
+#   token:  Token used for paging (measurement id, uint8)
+@app.route('/api/v1/measurement', methods = ['GET'])
+def read_measurements():
+    # try:
+    res = Measurement.query.all()
+    res_list = []
+    token = 0
+    for mes in res:
+        if mes.id > token:
+            token = mes.id    
+        res_list.append(object_as_dict(mes))
+    return jsonify(res_list), status.HTTP_200_OK
+    # except:
+    #     res = {
+    #         "status": 500,
+    #         "message": "Internal server error."
+    #     }
+    #     return res, status.HTTP_500_INTERNAL_SERVER_ERROR
