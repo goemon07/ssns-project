@@ -9,58 +9,45 @@
 #define DHT_TYPE DHT22
 
 // Delay in ms between data messages
-#define DELAY 250
+#define DELAY 500
 // Delay if error during message transmission
 #define ERROR_DELAY 2000
 // Read temperature every n messages
-#define TEMPERATURE_SPEED 8
+#define TEMPERATURE_SPEED 4
 // Send heartbeat every n messages (if no data)
-#define HEARTBEET_SPEED 40
+#define HEARTBEET_SPEED 20
+
+// Enable to debug on the serial adapter
+// #define SERIAL_DEBUG 1
 
 DHT dht(DHT_PIN, DHT_TYPE);
 MMA8452Q accel;
 XBee xbee;
-XBeeAddress64 sink = XBeeAddress64();
-int i = 0;
-
-void handshake() {
-  uint8_t payload[36] = { [0] = 'H', 'E', 'L', 'O' };
-  ZBTxRequest req = ZBTxRequest(XBeeAddress64(), payload, sizeof(payload));
-
-  while (1) {
-    xbee.send(req);
-    bool retry = false;
-    while (!retry && xbee.readPacket(1000) && xbee.getResponse().isAvailable()) {
-      switch (xbee.getResponse().getApiId()) {
-        case ZB_TX_STATUS_RESPONSE:
-        {
-          ZBTxStatusResponse txStatus;
-          xbee.getResponse().getTxStatusResponse(txStatus);
-          if (txStatus.isError()) {
-            retry = true;
-          }
-          break;
-        }
-        case ZB_RX_RESPONSE:
-        {
-          ZBRxResponse rxResponse;
-          xbee.getResponse().getZBRxResponse(rxResponse);
-          sink = rxResponse.getRemoteAddress64();
-
-          // TODO: Handle key exchange
-
-          return;
-        }
-      }
-    }
-  }
-}
+XBeeAddress64 sink;
+long int i = 0;
+bool heartbeatRequired = true;
 
 bool trySend(uint8_t *payload, int payloadLength) {
-  ZBTxRequest req = ZBTxRequest(XBeeAddress64(), payload, payloadLength);
+#ifdef SERIAL_DEBUG
+  payload[4] = 0;
+  Serial.print("> ");
+  Serial.print((char*)payload);
+  Serial.print(" (");
+  Serial.print(payloadLength);
+  Serial.println(" bytes)");
+  return true;
+#else
+  // Discard all incoming packets
+  while (xbee.readPacket(10));
+
+#ifndef ZIGBEE_RETRY
+  ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
+  xbee.send(req);
+#else
   for (int retry = 0; retry < 3; retry++) {
+    ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
     xbee.send(req);
-    while (xbee.readPacket(100) && xbee.getResponse().isAvailable()) {
+    while (xbee.readPacket(2000) && xbee.getResponse().isAvailable()) {
       switch (xbee.getResponse().getApiId()) {
         case ZB_TX_STATUS_RESPONSE:
         {
@@ -76,22 +63,65 @@ bool trySend(uint8_t *payload, int payloadLength) {
   }
 
   return false;
+#endif
+#endif
 }
 
-void log(const char *msg) {
+void logRemote(const char *msg) {
   uint8_t payload[strlen(msg) + 4] = { [0] = 'L', 'O', 'G', '_' };
   memcpy(payload + 4, msg, strlen(msg));
 
   trySend(payload, sizeof(payload));
 }
 
+void handshake() {
+  uint8_t payload[36] = { [0] = 'H', 'E', 'L', 'O' };
+  ZBTxRequest req = ZBTxRequest(XBeeAddress64(), payload, sizeof(payload));
+
+  while (1) {
+    xbee.send(req);
+    bool retry = false;
+    while (!retry && xbee.readPacket(5000) && xbee.getResponse().isAvailable()) {
+      switch (xbee.getResponse().getApiId()) {
+        case ZB_TX_STATUS_RESPONSE:
+        {
+          ZBTxStatusResponse txStatus;
+          xbee.getResponse().getTxStatusResponse(txStatus);
+          if (txStatus.isError()) {
+            retry = true;
+          }
+          break;
+        }
+        case ZB_RX_RESPONSE:
+        {
+          ZBRxResponse rxResponse;
+          xbee.getResponse().getZBRxResponse(rxResponse);
+          char buf[100];
+          sprintf(buf, "%lx %lx", (unsigned long) rxResponse.getRemoteAddress64().getMsb(), (unsigned long) rxResponse.getRemoteAddress64().getLsb());
+          logRemote(buf);
+
+          // TODO: Handle key exchange
+
+          return;
+        }
+      }
+    }
+  }
+}
+
 void setup() {
+#ifdef SERIAL_DEBUG
+  Serial.begin(9600);
+#endif
+
   // Set up sensors
   Wire.begin();
-  if(accel.begin() == false) {
-    Serial.println("Error initializing MMA8452Q.");
+  if(accel.begin()) {
+    accel.setScale(SCALE_2G);
   }
   dht.begin();
+
+#ifndef SERIAL_DEBUG
 
   // Set up serial and xbee
   Serial.begin(115200);
@@ -102,15 +132,17 @@ void setup() {
 
   // Execute handshake
   handshake();
+#endif
 
-  log("Handshake completede successfully");
 }
 
 void loop() {
+  long start = millis();
+
   float data[5] = { NAN, NAN, NAN, NAN, NAN };
 
   // Read temperature sensor every 2s
-  if (i % TEMPERATURE_SPEED == 0) {
+  if ((i % TEMPERATURE_SPEED) == 0) {
     data[0] = dht.readTemperature();
     data[1] = dht.readHumidity();
   }
@@ -124,32 +156,44 @@ void loop() {
 
   bool hasData = false;
   for (unsigned int i = 0; i < sizeof(data) / sizeof(float); i++) {
-    if (isnan(data[i]) != 1) {
+    if (!isnan(data[i])) {
       hasData = true;
       break;
     }
   }
 
-  uint8_t *payload = NULL;
-  int payloadLength;
+  uint8_t *payload = (uint8_t*) malloc(32);
+  int payloadLength = 0;
 
   i++;
 
   if (hasData) {
-    payload = new uint8_t[24] { 'D', 'A', 'T', 'A' };
-    payloadLength = 24;
+    payload[0] = 'D';
+    payload[1] = 'A';
+    payload[2] = 'T';
+    payload[3] = 'A';
+    payloadLength = 28;
     memcpy(payload + 4, data, 20);
-  } else if (i % HEARTBEET_SPEED == 0) {
-    payload = new uint8_t[4] { 'B', 'O', 'O', 'P' };
-    payloadLength = 4;
-  } else {
-    delay(DELAY);
-    return;
+    memcpy(payload + 24, &i, sizeof(i));
+    heartbeatRequired = false;
+  } else if ((i % HEARTBEET_SPEED) == 0) {
+    if (heartbeatRequired) {
+      payload[0] = 'B';
+      payload[1] = 'O';
+      payload[2] = 'O';
+      payload[3] = 'P';
+      payloadLength = 4;
+    }
+
+    heartbeatRequired = true;
   }
 
-  if (trySend(payload, payloadLength)) {
-    delay(DELAY);
+  if (!payload || trySend(payload, payloadLength)) {
+    long timeout = max((start - millis()) + DELAY, 10);
+    delay(timeout);
   } else {
     delay(ERROR_DELAY);
   }
+
+  free(payload);
 }
