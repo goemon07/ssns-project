@@ -111,16 +111,16 @@ def object_as_dict(obj):
 def read_measurements():
     arg = request.args.get('token')
     try:
+        query = Measurement.query
         if arg:
-            res = Measurement.query.filter(Measurement.id > arg)
+            query = query.filter(Measurement.id > arg)
         else:
-            since = datetime.now() - timedelta(hours=24)
-            res = Measurement.query.filter(Measurement.timestamp > since)
-        token = arg or 0
+            since = datetime.utcnow() - timedelta(hours=1)
+            query = query.filter(Measurement.timestamp > since)
+        query = list(query.order_by(Measurement.id))
+        token = query[-1].id if len(query) else arg
         res_list = []
-        for mes in res:
-            if mes.id > token:
-                token = mes.id    
+        for mes in query:
             res_list.append(object_as_dict(mes))
         ret_val = {"data": res_list, "token": token}
         return jsonify(ret_val), status.HTTP_200_OK
