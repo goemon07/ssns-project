@@ -107,18 +107,19 @@ def object_as_dict(obj):
 #   token:  Token used for paging (measurement id, uint8)
 @app.route('/api/v1/measurement', methods = ['GET'])
 def read_measurements():
-    # try:
-    res = Measurement.query.all()
-    res_list = []
-    token = 0
-    for mes in res:
-        if mes.id > token:
-            token = mes.id    
-        res_list.append(object_as_dict(mes))
-    return jsonify(res_list), status.HTTP_200_OK
-    # except:
-    #     res = {
-    #         "status": 500,
-    #         "message": "Internal server error."
-    #     }
-    #     return res, status.HTTP_500_INTERNAL_SERVER_ERROR
+    try:
+        res = Measurement.query.all()
+        res_list = []
+        token = 0
+        for mes in res:
+            if mes.id > token:
+                token = mes.id    
+            res_list.append(object_as_dict(mes))
+        res_list.append({'token': token})
+        return jsonify(res_list), status.HTTP_200_OK
+    except:
+        res = {
+            "status": 500,
+            "message": "Internal server error."
+        }
+        return res, status.HTTP_500_INTERNAL_SERVER_ERROR
