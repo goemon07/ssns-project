@@ -8,7 +8,7 @@ import os, logging
 from app                import app, db, bc
 from app.models         import Node, Measurement
 from flask_sqlalchemy   import SQLAlchemy, inspect
-from datetime           import datetime
+from datetime           import datetime, timedelta
 
 @app.route('/sitemap.xml')
 def sitemap():
@@ -89,7 +89,7 @@ def register_new_node():
 def insert_measurement():
     try:
         content = request.json
-        new_meas = Measurement(node_serial=content['serial'], timestamp=datetime.now(), sensor=content['type'], value=content['value'])
+        new_meas = Measurement(node_serial=content['serial'], timestamp=datetime.utcnow(), sensor=content['type'], value=content['value'])
         db.session.add(new_meas)
         db.session.commit()
         return {}, status.HTTP_204_NO_CONTENT
@@ -109,16 +109,21 @@ def object_as_dict(obj):
 #   token:  Token used for paging (measurement id, uint8)
 @app.route('/api/v1/measurement', methods = ['GET'])
 def read_measurements():
+    arg = request.args.get('token')
     try:
-        res = Measurement.query.all()
+        if arg:
+            res = Measurement.query.filter(Measurement.id > arg)
+        else:
+            since = datetime.now() - timedelta(hours=24)
+            res = Measurement.query.filter(Measurement.timestamp > since)
+        token = arg or 0
         res_list = []
-        token = 0
         for mes in res:
             if mes.id > token:
                 token = mes.id    
             res_list.append(object_as_dict(mes))
-        res_list.append({'token': token})
-        return jsonify(res_list), status.HTTP_200_OK
+        ret_val = {"data": res_list, "token": token}
+        return jsonify(ret_val), status.HTTP_200_OK
     except Exception as e:
         print(e)
         res = {
