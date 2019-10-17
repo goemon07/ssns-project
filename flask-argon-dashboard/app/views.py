@@ -71,7 +71,8 @@ def register_new_node():
         db.session.add(new_node)
         db.session.commit()
         return {}, status.HTTP_204_NO_CONTENT
-    except:
+    except Exception as e:
+        print(e)
         res = {
             "status": 400,
             "message": "Invalid key or duplicate serial number."
@@ -92,7 +93,8 @@ def insert_measurement():
         db.session.add(new_meas)
         db.session.commit()
         return {}, status.HTTP_204_NO_CONTENT
-    except:
+    except Exception as e:
+        print(e)
         res = {
             "status": 400,
             "message": "Invalid sensor type or not existing sensor serial."
@@ -117,7 +119,8 @@ def read_measurements():
             res_list.append(object_as_dict(mes))
         res_list.append({'token': token})
         return jsonify(res_list), status.HTTP_200_OK
-    except:
+    except Exception as e:
+        print(e)
         res = {
             "status": 500,
             "message": "Internal server error."
