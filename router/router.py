@@ -40,9 +40,9 @@ class RoutingServer:
         try:
             type = msg.data[:4].decode('UTF-8')
             if type == 'HELO':
-                # requests.post('http://localhost:5000/api/v1/node/register', json={
-                #     'serial': str(msg.remote_device.get_64bit_addr())
-                # })
+                requests.post('http://localhost:5000/api/v1/node/register', json={
+                    'serial': str(msg.remote_device.get_64bit_addr())
+                })
                 self.dev.send_data(msg.remote_device, b'HELO')
                 print(msg.remote_device.get_64bit_addr(), 'has been registered')
             elif type == 'DATA':
@@ -50,11 +50,11 @@ class RoutingServer:
                 idx = int.from_bytes(msg.data[-4:], 'little')
                 print(msg.remote_device.get_64bit_addr(), idx, data)
                 for k, v in filter(lambda x: not math.isnan(x[1]), zip(range(len(data)), data)):
-                    # requests.post('http://localhost:5000/api/v1/measurement', json={
-                    #     'serial': str(msg.remote_device.get_64bit_addr()),
-                    #     'type': k,
-                    #     'value': v
-                    # })
+                    requests.post('http://localhost:5000/api/v1/measurement', json={
+                        'serial': str(msg.remote_device.get_64bit_addr()),
+                        'type': k,
+                        'value': v
+                    })
                     pass
                 pass
             elif type == 'LOG_':
