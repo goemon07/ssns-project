@@ -67,15 +67,17 @@ def index(path):
 def register_new_node():
     content = request.json 
     try:
-        new_node = Node(serial=content['serial'])
-        db.session.add(new_node)
-        db.session.commit()
+        query = list(Node.query.filter(Node.serial == content['serial']))
+        if not len(query):
+            new_node = Node(serial=content['serial'])
+            db.session.add(new_node)
+            db.session.commit()
         return {}, status.HTTP_204_NO_CONTENT
     except Exception as e:
         print(e)
         res = {
             "status": 400,
-            "message": "Invalid key or duplicate serial number."
+            "message": "Invalid key."
         }
         return res, status.HTTP_400_BAD_REQUEST
 
