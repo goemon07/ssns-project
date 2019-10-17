@@ -23,7 +23,7 @@ class Measurement(db.Model):
     # variant needed for the autoincrement since bigint in sqlite are not autoinc by default 
     id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"), primary_key=True)
     node_serial = db.Column(db.String, db.ForeignKey('nodes.serial'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
+    timestamp = db.Column(db.DateTime(3), nullable=False)
     sensor = db.Column(db.Integer, nullable=False)
     value = db.Column(db.Float, nullable=False)
         
