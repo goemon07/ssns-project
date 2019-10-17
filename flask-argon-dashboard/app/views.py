@@ -121,6 +121,7 @@ def read_measurements():
         token = query[-1].id if len(query) else arg
         res_list = []
         for mes in query:
+            mes.timestamp = int(mes.timestamp.timestamp()*1000)
             res_list.append(object_as_dict(mes))
         ret_val = {"data": res_list, "token": token}
         return jsonify(ret_val), status.HTTP_200_OK
