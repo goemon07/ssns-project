@@ -40,10 +40,7 @@ bool trySend(uint8_t *payload, int payloadLength) {
   // Discard all incoming packets
   while (xbee.readPacket(10));
 
-#ifndef ZIGBEE_RETRY
-  ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
-  xbee.send(req);
-#else
+#ifdef ZIGBEE_RETRY
   for (int retry = 0; retry < 3; retry++) {
     ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
     xbee.send(req);
@@ -63,6 +60,10 @@ bool trySend(uint8_t *payload, int payloadLength) {
   }
 
   return false;
+#else
+  // No retry
+  ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
+  xbee.send(req);
 #endif
 #endif
 }
