@@ -64,6 +64,8 @@ bool trySend(uint8_t *payload, int payloadLength) {
   // No retry
   ZBTxRequest req = ZBTxRequest(sink, payload, payloadLength);
   xbee.send(req);
+  
+  return true;
 #endif
 #endif
 }
