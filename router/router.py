@@ -68,7 +68,7 @@ class RoutingServer:
 
 if __name__ == '__main__':
     server = RoutingServer()
-    port = sys.argv[0] if len(sys.argv) == 1 else '/dev/ttyACM0'
+    port = sys.argv[1] if len(sys.argv) == 2 else '/dev/ttyACM0'
     server.start(port)
     try:
         while True:
