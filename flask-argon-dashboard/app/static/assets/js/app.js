@@ -43,6 +43,9 @@ $(function () {
             scales: {
                 xAxes: [{
                     type: 'time',
+                    time: {
+                        tooltipFormat: 'HH:mm:ss.SSS (Z)'
+                    },
                 }],
                 yAxes: [{
                     id: 'y-axis-1',
@@ -72,7 +75,7 @@ $(function () {
     ];
 
     function updateData(data) {
-        let t = '', v = [], l, lt;
+        let t = null, v = [];
         for (let item of data.data) {
             var node = nodes.get(item.node_serial);
             if (node === undefined) {
@@ -100,21 +103,17 @@ $(function () {
                 });
             }
 
-            if (item.timestamp !== t) {
-                if (v.length === 3 && l) {
+            let timestamp = item.timestamp;
+            if (timestamp !== t) {
+                if (t && v.length === 3) {
                     let val = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]) - 1;
-                    if (val < 2) {
-                        motionChart.data.datasets[node].data.push({
-                            t: Date.parse(t),
-                            y: val
-                        });
-                    }
+                    motionChart.data.datasets[node].data.push({
+                        t: t,
+                        y: val
+                    });
                 }
 
-                lt = Date.parse(t);
-                l = v;
-
-                t = item.timestamp;
+                t = timestamp;
                 v = [];
             }
 
@@ -122,7 +121,7 @@ $(function () {
                 case 0:
                 case 1:
                     envChart.data.datasets[node * 2 + item.sensor].data.push({
-                        t: Date.parse(item.timestamp),
+                        t: timestamp,
                         y: item.value
                     });
                     break;
