@@ -87,12 +87,16 @@ def register_new_node():
 #   serial:     Xbee serial number
 #   type:  Sensor type
 #   value:  Measurement
-@app.route('/api/v1/measurement', methods = ['POST'])
-def insert_measurement():
+@app.route('/api/v1/measurements', methods = ['POST'])
+def insert_measurements():
     try:
         content = request.json
-        new_meas = Measurement(node_serial=content['serial'], timestamp=datetime.utcnow(), sensor=content['type'], value=content['value'])
-        db.session.add(new_meas)
+        s = content['serial']
+        t = datetime.utcnow()
+        data = content['data']
+        for k in data:
+            new_meas = Measurement(node_serial=s, timestamp=t, sensor=k, value=data[k])
+            db.session.add(new_meas)
         db.session.commit()
         return {}, status.HTTP_204_NO_CONTENT
     except Exception as e:
@@ -109,7 +113,7 @@ def object_as_dict(obj):
 
 # expected fields:
 #   token:  Token used for paging (measurement id, uint8)
-@app.route('/api/v1/measurement', methods = ['GET'])
+@app.route('/api/v1/measurements', methods = ['GET'])
 def read_measurements():
     arg = request.args.get('token')
     try:

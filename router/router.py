@@ -49,13 +49,11 @@ class RoutingServer:
                 data = struct.unpack('fffff', msg.data[4:24])
                 idx = int.from_bytes(msg.data[-4:], 'little')
                 print(msg.remote_device.get_64bit_addr(), idx, data)
-                for k, v in filter(lambda x: not math.isnan(x[1]), zip(range(len(data)), data)):
-                    requests.post('http://localhost:5000/api/v1/measurement', json={
-                        'serial': str(msg.remote_device.get_64bit_addr()),
-                        'type': k,
-                        'value': v
-                    })
-                    pass
+                measurements = dict(filter(lambda x: not math.isnan(x[1]), zip(range(len(data)), data)))
+                requests.post('http://localhost:5000/api/v1/measurements', json={
+                    'serial': str(msg.remote_device.get_64bit_addr()),
+                    'data': measurements
+                })
                 pass
             elif type == 'LOG_':
                 print(msg.remote_device.get_64bit_addr(), msg.data[4:].decode('UTF-8'))
