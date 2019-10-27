@@ -52,7 +52,7 @@ After booting up, the node starts with the initialization logic. During this tim
 
 \begin{itemize}
 \item Check whether a temperature / humidity sensor is connected on PIN 13 and configure the mode accordingly
-\item Initialize the I2C bus on the analog inputs A4 and A5
+\item Initialize the I\textsuperscript{2}C bus on the analog inputs A4 and A5
 \item Configure the accelerometer in 2G / high accuracy mode
 \item Load / generate an ECC keypair and generate a nonce
 \end{itemize}
@@ -169,8 +169,12 @@ All data packets are expected to be of the form \texttt{DATA(serialNr, packetInd
 \part{Implementation limitations and challenges}
 \section{Hardware challenges}
 \subsection{Sensors}\label{subsec:sensors}
-\subsection{UART limitations}\label{subsec:uart}
+During the project development one of the constant annoyances has been the acceleration sensor. Often times the sensor works correctly and flawlessly for minutes and suddenly stops working. Wiggling with the jumper cables or resistors seems to fix the issue in some cases, so it's not a software issue. However, given it uses the I\textsuperscript{2}C bus and has to be initialized correctly if the connection fails during the startup it will never start to work. This issue has caused a lot of frustrated reboots of the sensor nodes during the development and also the final demo.
+
+\subsection{Arduino UNO platform}\label{subsec:uart}
+The Arduino platform is great for any kind of prototyping of IoT projects. However, the chosen board configuration for this project only has a single UART. Given XBee uses this port for its combination the situation arises where one constantly has to disconnect the modem to be able to upload a new version, put it back on and reconnect the power. Additionally debug logging is impossible until the network is working correctly and a remote logging facility has been implemented.
+
 \subsection{Entropy generation}\label{subsec:entropy}
-% Specify any implementation related limitations (hardware, software) and challenges you faced during the project work.
+Generating entropy on embedded systems is never an easy task. The implementation we picked as an entropy source uses the lowest bit from the ADC of an unconnected analog PIN. This however can lead to very long times if more than a few bits of random data are required. In our case, the first device boot generating the encryption key could take up to a multiple minutes without any user feedback.
 
 \end{document}
