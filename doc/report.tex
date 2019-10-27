@@ -1,4 +1,4 @@
-\documentclass[]{scrartcl}
+\documentclass[a4paper,11pt]{scrartcl}
 
 
 % Title Page
@@ -8,14 +8,31 @@
 \begin{document}
 \maketitle
 
-\section{Dashboard}
-\subsection{API}
+\part{Introduction}
+% TODO: Gabriele
+
+\part{Network design}
+% TODO: Stephan
+
+\part{Implementation details}
+\section{Hardware}
+% TODO: Gabriele
+
+\section{Software}
+\subsection{Sensor}
+% TODO: Stephan
+
+\subsection{Router}
+% TODO: Stephan
+
+\subsection{Dashboard}
+% TODO: Gabriele
+\subsubsection{API}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
 
-\subsubsection{Register node}
+\subsubsection*{Register node}
 Registers a sensor node in the database using the Xbee serial number as the unique identifier.
 
-\subsubsection*{URL}
 \texttt{POST /api/v1/node/register}
 
 \subsubsection*{Request parameters}
@@ -75,5 +92,14 @@ Reads measurement for display in chart.
 \begin{description}
 \item[200 OK] Measurements
 \end{description}
+
+\section{Security}
+% TODO: Stephan
+
+\part{Results}
+% Simulation results (for simulation-based projects) and measurements (testbed-based projects).
+
+\part{Implementation limitations and challenges}
+% Specify any implementation related limitations (hardware, software) and challenges you faced during the project work.
 
 \end{document}
