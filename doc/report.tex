@@ -1,7 +1,7 @@
 \documentclass[a4paper,11pt]{scrartcl}
 
+\usepackage{hyperref}
 
-% Title Page
 \title{SSNS Project}
 \author{Gabriele Orazi, Stephan Hauser}
 
@@ -12,22 +12,65 @@
 % TODO: Gabriele
 
 \part{Network design}
-% TODO: Stephan
+The sensor network uses XBee modules in ZigBee mode for all communication. The network settings are PAN ID 3332 and a randomly generated encryption key for security. All modules are set to the API mode before deployment.
+
+The network is split into three components which provide the communication infrastructure for all nodes. It should be noted that the applications developed during the project do not configure the modem in any way, so the configuration of the modems must be done before deployment.
+
+\section{Coordinator}\label{sec:coordinator}
+The coordinator is implemented using an Arduino UNO with a XBee shield. A jumper is used to disable the Arduino's processor by shorting the ground and reset PINs, which allows it to be used as a USB to XBee adapter. This is connected to a computer running the router application (see sub section~\ref{subsec:router}), which converts all the packets into REST API calls.
+
+\section{Router}
+Some of the devices have their XBee modem configured with the router mode (\texttt{CE=0}). This prevents the XBee modem to go to sleep and allows it to route packets from other devices. It is useful to set this mode on some strategically placed devices to increase the reach of the network and to reduce the transmission power needed for all other devices. The routers can run in hybrid mode if they have sensors connected to them as well.
+
+\section{Nodes}
+The leaf nodes are configured in the non-routing device mode (\texttt{CE=2}). This maximizes the devices battery lifetime by sleeping whenever the modem is not being used. This mode should be configured on the vast majority of the devices during deployment.
 
 \part{Implementation details}
 \section{Hardware}
 % TODO: Gabriele
 
 \section{Software}
-\subsection{Sensor}
-% TODO: Stephan
+This section describes the software projects developed during the project starting from the node and going through to the user interface.
 
-\subsection{Router}
-% TODO: Stephan
+\subsection{Sensor}
+The sensors themselves have been developed in C++ using the Arduino SDK. Contiki has been ruled out as a potential operating system given the last Arduino Contiki port is based on Contiki 2.2, which would have caused a lot of work just to get the sensors working on it.
+
+The following defines can be used to customize the behavior of the sensor nodes:
+
+\begin{description}
+\item[SERIAL\_DEBUG] Disables ZigBee and uses the UART port as a debugging and logging interface instead (see sub section~\ref{subsec:uart}). This is helpful during development and for testing the sensors.
+\item[ENABLE\_SECURITY] Enables the use of the security layer (see section~\ref{sec:security}). This causes much longer startup times due to potential issues with entropy generation (see sub section~\ref{subsec:entropy}).
+\item[ZIGBEE\_RETRY] Enables a package retry logic for sending data packets. This can cause some delays if a sensor with a high output data rate is connected.
+\end{description}
+
+The sensor project has been implemented using the \href{https://platformio.org/}{PlatformIO development platform}. This IDE supports over 700 embedded platforms and relies on Visual Studio Code for the editor and code completion. It also manages the binary upload and supports logging through the serial port. The built in library manager gives simple access to thousands of open source libraries, most of them supporting the Arduino platform. It also restores these libraries from the internet when needed so it can be excluded from the source repository.
+
+During the node lifetime it goes through multiple states:
+
+\subsubsection*{Initialization state}
+After booting up, the node starts with the initialization logic. During this time, it will:
+
+\begin{itemize}
+\item Check whether a temperature / humidity sensor is connected on PIN 13 and configure the mode accordingly
+\item Initialize the I2C bus on the analog inputs A4 and A5
+\item Configure the accelerometer in 2G / high accuracy mode
+\item Load / generate an ECC keypair and generate a nonce
+\end{itemize}
+
+\subsubsection*{Handshake state}
+The handshake state will repeat every 5s until it succeeds. It will send a key handshake message to the server and wait for a reply back from it. Details of the handshake protocols are specified in section \ref{sec:security}.
+
+\subsubsection*{Measurement state}
+During this mode the sensor will read all available sensors and send the data to the server. If the retry logic is enabled it will also check for any transmission reports and discard / retry any sent packets. This is repeated every 250ms (2000ms if accelerometer is unavailable) to allow the device to go to sleep to conserve power.
+
+If the transmission fails for more than 10s the node goes back into the handshake state.
+
+\subsection{Router}\label{subsec:router}
+The router is implemented in Python using the digi-xbee and requests library. It's only job is to connect to the coordinator (see section~\ref{sec:coordinator}) via the serial port and translate between ZigBee and the REST interface implemented in the dashboard (see sub section~\ref{subsec:api}).
 
 \subsection{Dashboard}
 % TODO: Gabriele
-\subsubsection{API}
+\subsubsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
 
 \subsubsection*{Register node}
@@ -93,13 +136,41 @@ Reads measurement for display in chart.
 \item[200 OK] Measurements
 \end{description}
 
-\section{Security}
-% TODO: Stephan
+\section{Security}\label{sec:security}
+\subsection{Overview}
+The security layer provides an end-to-end encrypted and authenticated message channel for all data messages. The implementation is custom and is based on ECC for public key cryptography and AES for data encryption. During the handshake phase all the shared secrets for the data encryption are established between the server and the sensors. Additionally, the ZigBee based encryption mode can be used as another layer of security.
+
+\subsection{Setup and Handshake}
+During the deployment the server's public key is written to the sensor nodes' flash memory acting as a trust anchor. While directly using this key does not allow us to change it if it were compromised, it does simplify the protocol a lot and is definitely suitable for the scope of the project. In a full deployment of such sensor nodes this weakness should however be solved by implementing a three-leg handshake with proper authentication of the server using an offline key as the signature.
+
+The sensor first enters the key establishment phase, consisting of the following steps:
+\begin{enumerate}
+\item Generate ECC keypair using secp256k1 curve and store in EEPROM (only on first boot)
+\item Calculate shared secret using \texttt{SHA256(ECDH(privateKey, serverKey))[:16]}
+\item Generate 32bit nonce \texttt{cNonce}
+\item Send \texttt{HELO(serialNr, publicKey, {cNonce})}
+\item Server checks the node, stores the public key, generates the same shared secret and a nonce (\texttt{sNonce}) and replies with \texttt{HELO({sNonce})}
+\item Both sides derive the DK and IV to use with \texttt{DK, IV = HMAC-SHA256(HK,cNonce + sNonce + serial)}
+\end{enumerate}
+
+During the handshake, the encryption mode is AES-128 with ECB and a 0-IV. Since the nonces are only 32bit each and are purely random data this is secure. The encryption of the nonces is theoretically not necessary, but it's used to prevent a MITM from modifying the handshake, since the encrypted nonce is expected to be only 32bit in length and the rest of the block is padded with 0 bits.
+
+\subsection{Data transmission}
+All data packets are expected to be of the form \texttt{DATA(serialNr, packetIndex, \{ measurements \})} using AES-128 in CTR mode. The IV is XORed with \texttt{packetIndex << 16}, which achieves multiple goals:
+
+\begin{itemize}
+\item The use of a deterministic (yet non-repeated) IV ensures that the IV does not have to be sent to the server, thus saving 16 byte of data per packet
+\item Shifting the packetIndex by 16 bytes leaves the lower 16 bytes for use in the CTR operation mode, guaranteeing that no two blocks have the same key stream
+\end{itemize}
 
 \part{Results}
 % Simulation results (for simulation-based projects) and measurements (testbed-based projects).
 
 \part{Implementation limitations and challenges}
+\section{Hardware challenges}
+\subsection{Sensors}\label{subsec:sensors}
+\subsection{UART limitations}\label{subsec:uart}
+\subsection{Entropy generation}\label{subsec:entropy}
 % Specify any implementation related limitations (hardware, software) and challenges you faced during the project work.
 
 \end{document}
