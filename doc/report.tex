@@ -9,7 +9,10 @@
 \maketitle
 
 \part{Introduction}
-% TODO: Gabriele
+The aim of the assigned project is to create a monitor tool capable to collect data from different sensors and show them into a web application.
+Nodes of the developed Wireless Sensor Network are equipped with two different kind of sensors: an accelerometer, which is able to detect vibrations, and a humidity and temperature sensor.
+Arduino Uno is used for nodes and the boarder router of the network, while XBee shield is attached on it as external radio in order to establish communications.
+Data collected by border router are stored into a database and shown in a dashboard using a Python Flask web server.
 
 \part{Network design}
 The sensor network uses XBee modules in ZigBee mode for all communication. The network settings are PAN ID 3332 and a randomly generated encryption key for security. All modules are set to the API mode before deployment.
@@ -150,7 +153,8 @@ The sensor first enters the key establishment phase, consisting of the following
 \item Generate 32bit nonce \texttt{cNonce}
 \item Send \texttt{HELO(serialNr, publicKey, {cNonce})}
 \item Server checks the node, stores the public key, generates the same shared secret and a nonce (\texttt{sNonce}) and replies with \texttt{HELO({sNonce})}
-\item Both sides derive the DK and IV to use with \texttt{DK, IV = HMAC-SHA256(HK,cNonce + sNonce + serial)}
+\item Both sides derive the DK and IV to use with \texttt{DK, IV = HMAC-SHA256(HK,
+cNonce + sNonce + serial)}
 \end{enumerate}
 
 During the handshake, the encryption mode is AES-128 with ECB and a 0-IV. Since the nonces are only 32bit each and are purely random data this is secure. The encryption of the nonces is theoretically not necessary, but it's used to prevent a MITM from modifying the handshake, since the encrypted nonce is expected to be only 32bit in length and the rest of the block is padded with 0 bits.
