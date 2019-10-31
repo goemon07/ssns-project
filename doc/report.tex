@@ -1,6 +1,10 @@
 \documentclass[a4paper,11pt]{scrartcl}
 
 \usepackage{hyperref}
+\usepackage{gensymb}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\graphicspath{{data/}}
 
 \title{SSNS Project}
 \author{Gabriele Orazi, Stephan Hauser}
@@ -30,7 +34,26 @@ The leaf nodes are configured in the non-routing device mode (\texttt{CE=2}). Th
 
 \part{Implementation details}
 \section{Hardware}
-% TODO: Gabriele
+The previously mentioned hardware will be described in this section, listing characteristics of main components used for the realization of the project. In figure~\ref{fig:node} an example of a node is shown. Here an antenna is attached to the XBee module, connected to the Arduino Uno. Sensors are mounted in the breadboard and the whole node is powered by a battery pack.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=10cm]{hardware}
+    \caption{A node of the network.}
+    \label{fig:node}
+\end{figure}
+
+\subsection{Arduino Uno}
+Arduino Uno is a monothread microcontroller board based on the ATmega328P. It is able to use serial communication throw either USB or pins. Unfortunately, there's no possibilities to establish multiple connections and this may represent a limit (and in fact the project realization had to deal with that). The board comes also with 14 digital i/o pins and 6 analog pins.
+
+\subsection{XBee Module}
+The XBee Module is the device which allows different Arduino nodes to communicate wirelessly. The module is not able to send or receive data by itself and can only forward over-the-air data coming from the serial communication with a smart device. Other devices, equipped with XBee as well, will be able to receive and read the stream of data. The communication is based on modulation of waves in the electromagnetic spectrum.
+
+\subsection{DHT22 temperature and humidity sensor}
+The DHT22 sensor is well-known and widely used in this kind of projects. It can provide two different measurements and is more accurate than is predecessor DHT11. In fact, the temperature range which can be detected goes from -40 to 125\, \celsius\ with an accuracy of 0.5\, \celsius; the umidity index is provided as a percentage (0-100 \%) and the accuracy is 2-5 \%. It has been decided to poll the sensor each 2 seconds dues to the low sampling rate, which is 0.5 Hz. Even if it's better then the DHT11, this sensor is still not so accurate and responsive but sufficient for the project scope. 
+
+\subsection{MMA8451 triple axis accelerometer}
+The MMA8451 is a small accelerometer able to analyze three axis with a resolution of 14 bit. The maximum refresh rate can reach up to 800 Hz with a precision of approx. 1 / 10 000 g. The device comes with some embedded functions which can be customized by the developer: the most interesting one is the possibility to change between the normal polling mode and the interrupt one. In the first one, data is detected whenever explicitly required while in the second one, an interrupt is generated when movement is detected. The accelerometer communicate using I\textsuperscript{2}C digital output interface. In the proposed project, the device is queried each 250 ms.
 
 \section{Software}
 This section describes the software projects developed during the project starting from the node and going through to the user interface.
