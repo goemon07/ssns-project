@@ -102,7 +102,10 @@ The decision of adopting this dashboard comes from how the interface itself has 
 After the graphical adjustments of the dashboard, API development (see \ref{subsec:api}) and charts creation has been the only missing pieces in order to get the final result. As already integrated by Argon Dashboard, charts are based on the famous \href{https://www.chartjs.org/}{Chart.js}, which has been properly adjusted in order to visualize in the more effective way data coming from different sensors (using different colors) and multi-axix (for humidity and temperature sensor).
 
 \subsection{Database}\label{subsec:database}
-% TODO Gabriele
+Since SQLite and SQLAlchemy has always been a winning couple when associated with Python Flask, the triad has been chosen.
+\href{https://www.sqlalchemy.org/}{SQLAlchemy} is an Object Relational Mapper which permit to handle in a more flexible and comprehensive way database, creating a sort of abstraction level in between the web server and the database itself. \href{https://www.sqlite.org/index.html}{SQLite} has been the easier, effective and fast open source SQL database engine which works perfectly together with SQLAlchemy.
+
+The database structure has been divided into two different tables: the first one is the \textbf{Node} table, where sensor serial number are associated with an internal ID, while in the second table (called \textbf{Measurement}) incoming stats are stored with timestamp, type of measurement and origin sensor.
 
 \subsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
