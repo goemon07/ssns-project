@@ -110,7 +110,7 @@ The database structure has been divided into two different tables: the first one
 \subsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
 
-\subsubsection*{Register node}
+\subsubsection{Register node}
 Registers a sensor node in the database using the Xbee serial number as the unique identifier.
 
 \texttt{POST /api/v1/node/register}
@@ -118,6 +118,7 @@ Registers a sensor node in the database using the Xbee serial number as the uniq
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number in HEX (unique node identifier)
+\item[public key] Used to enforce authentication 
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -125,12 +126,14 @@ No content.
 
 \subsubsection*{Status codes}
 \begin{description}
-\item[204 No content] Registration successful
-\item[400 Invalid request] Invalid key or duplicate serial number
+\item[200 Ok] Registration successful
+\item[400 Invalid request] Invalid key
 \end{description}
 
+
+
 \subsubsection{Store measurement}
-Stores a measurement for a given node.
+Stores a measurement for a given node pushing it into the database.
 
 \subsubsection*{URL}
 \texttt{POST /api/v1/measurement}
@@ -138,8 +141,12 @@ Stores a measurement for a given node.
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number
-\item[type] Sensor type (uint8)
-\item[value] Sensor value as float
+\item[Array of Sensor values] composed by:
+\begin{itemize}
+    \item \textbf{type} Sensor type (uint8)
+    \item \textbf{value} Array of sensor values
+\end{itemize}
+\item[Signature]
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -148,11 +155,13 @@ No content.
 \subsubsection*{Status codes}
 \begin{description}
 \item[204 No content] Measurement recorded successful
-\item[400 Invalid request] Invalid sensor type
+\item[400 Invalid request] Invalid sensor type or sensor serial
 \end{description}
 
+
+
 \subsubsection{Read measurements}
-Reads measurement for display in chart.
+Reads measurement from the database.
 
 \subsubsection*{URL}
 \texttt{GET /api/v1/measurement}
@@ -164,7 +173,7 @@ Reads measurement for display in chart.
 
 \subsubsection*{Response parameters}
 \begin{description}
-\item[data] All data since the last token (in arbitrary format)
+\item[data] All data since the last token (last hour or records by default)
 \item[token] Token for the next call
 \end{description}
 
