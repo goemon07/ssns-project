@@ -95,8 +95,16 @@ If the transmission fails for more than 10s the node goes back into the handshak
 The router is implemented in Python using the digi-xbee and requests library. It's only job is to connect to the coordinator (see section~\ref{sec:coordinator}) via the serial port and translate between ZigBee and the REST interface implemented in the dashboard (see sub section~\ref{subsec:api}).
 
 \subsection{Dashboard}
-% TODO: Gabriele
-\subsubsection{API}\label{subsec:api}
+All the data coming from sensors can be seen in different charts integrated into a fresh web dashboard. The realization of such interface rely on an open source project called \href{https://github.com/app-generator/flask-argon-dashboard}{Flask Argon Dashboard}, which is released under MIT License. Many functions can be found on this project: user authentication mechanisms and admin tools are just some examples in addition of a multitude of different template plots and graphs. For the aim of this project, all those tools were too much and the majority of them has been cut off in favor of a cleaner interface.
+
+The decision of adopting this dashboard comes from how the interface itself has been developed: since is coded in \href{https://palletsprojects.com/p/flask/}{Python Flask} and well integrated with SQLite database and SQLAlchemy ORM (see \ref{subsec:database}), the setup it's been faster and more efficient since it was aligned with the design decisions that has been taken at the early stages of the project discussion.
+
+After the graphical adjustments of the dashboard, API development (see \ref{subsec:api}) and charts creation has been the only missing pieces in order to get the final result. As already integrated by Argon Dashboard, charts are based on the famous \href{https://www.chartjs.org/}{Chart.js}, which has been properly adjusted in order to visualize in the more effective way data coming from different sensors (using different colors) and multi-axix (for humidity and temperature sensor).
+
+\subsection{Database}\label{subsec:database}
+% TODO Gabriele
+
+\subsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
 
 \subsubsection*{Register node}
