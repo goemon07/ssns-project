@@ -118,7 +118,7 @@ Registers a sensor node in the database using the Xbee serial number as the uniq
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number in HEX (unique node identifier)
-\item[publicKey] Used to enforce authentication 
+\item[publicKey] Device's public key used for key derivation and signature checks
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -127,7 +127,7 @@ No content.
 \subsubsection*{Status codes}
 \begin{description}
 \item[200 Ok] Registration successful
-\item[400 Invalid request] Invalid key
+\item[400 Invalid request] Invalid key or serial number
 \end{description}
 
 
@@ -141,10 +141,10 @@ Stores a measurement for a given node pushing it into the database.
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number
-\item[Array of Sensor values] composed by:
+\item[Array of Sensor values] composed of
 \begin{itemize}
     \item \textbf{type} Sensor type (uint8)
-    \item \textbf{value} Array of sensor values
+    \item \textbf{value} Sensor value (float)
 \end{itemize}
 \item[signature] ECDSA signature
 \end{description}
