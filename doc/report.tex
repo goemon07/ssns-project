@@ -15,13 +15,13 @@
 \part{Introduction}
 The aim of the assigned project is to create a monitor tool capable to collect data from different sensors and show them into a web application.
 Nodes of the developed Wireless Sensor Network are equipped with two different kind of sensors: an accelerometer, which is able to detect vibrations, and a humidity and temperature sensor.
-Arduino Uno is used for nodes and the boarder router of the network, while XBee shield is attached on it as external radio in order to establish communications.
-Data collected by border router are stored into a database and shown in a dashboard using a Python Flask web server.
+Arduino UNO is used for nodes and the boarder router of the network, while a XBee shield is attached to it as an external radio in order to establish communications.
+Data collected by border router are stored into a database and shown on a dashboard using a Python Flask web server.
 
 \part{Network design}
 The sensor network uses XBee modules in ZigBee mode for all communication. The network settings are PAN ID 3332 and a randomly generated encryption key for security. All modules are set to the API mode before deployment.
 
-The network is split into three components which provide the communication infrastructure for all nodes. It should be noted that the applications developed during the project do not configure the modem in any way, so the configuration of the modems must be done before deployment.
+The network is split into three components which provide the communication infrastructure for all nodes. It should be noted that the applications developed during the project do not configure the modem in any way, so the configuration of the modems must be done before deployment and written to the internal memory.
 
 \section{Coordinator}\label{sec:coordinator}
 The coordinator is implemented using an Arduino UNO with a XBee shield. A jumper is used to disable the Arduino's processor by shorting the ground and reset PINs, which allows it to be used as a USB to XBee adapter. This is connected to a computer running the router application (see sub section~\ref{subsec:router}), which converts all the packets into REST API calls.
@@ -34,7 +34,7 @@ The leaf nodes are configured in the non-routing device mode (\texttt{CE=2}). Th
 
 \part{Implementation details}
 \section{Hardware}
-The previously mentioned hardware will be described in this section, listing characteristics of main components used for the realization of the project. In figure~\ref{fig:node} an example of a node is shown. Here an antenna is attached to the XBee module, connected to the Arduino Uno. Sensors are mounted in the breadboard and the whole node is powered by a battery pack.
+The previously mentioned hardware will be described in this section, listing characteristics of main components used for the realization of the project. In figure~\ref{fig:node} an example of a node is shown. Here an antenna is attached to the XBee module, connected to the Arduino UNO. Sensors are mounted on the breadboard and the whole node is powered by a battery pack.
 
 \begin{figure}
     \centering
@@ -43,17 +43,17 @@ The previously mentioned hardware will be described in this section, listing cha
     \label{fig:node}
 \end{figure}
 
-\subsection{Arduino Uno}
-Arduino Uno is a monothread microcontroller board based on the ATmega328P. It is able to use serial communication throw either USB or pins. Unfortunately, there's no possibilities to establish multiple connections and this may represent a limit (and in fact the project realization had to deal with that). The board comes also with 14 digital i/o pins and 6 analog pins.
+\subsection{Arduino UNO}
+Arduino UNO is a monothread microcontroller board based on the ATmega328P. It is able to use serial communication through either USB or pins. Unfortunately, there's only support for a single UART which may represent a limit when using the XBee shield for communication (and in fact the project realization had to deal with that). The board comes also with 14 digital i/o pins and 6 analog pins.
 
 \subsection{XBee Module}
 The XBee Module is the device which allows different Arduino nodes to communicate wirelessly. The module is not able to send or receive data by itself and can only forward over-the-air data coming from the serial communication with a smart device. Other devices, equipped with XBee as well, will be able to receive and read the stream of data. The communication is based on modulation of waves in the electromagnetic spectrum.
 
 \subsection{DHT22 temperature and humidity sensor}
-The DHT22 sensor is well-known and widely used in this kind of projects. It can provide two different measurements and is more accurate than is predecessor DHT11. In fact, the temperature range which can be detected goes from -40 to 125\, \celsius\ with an accuracy of 0.5\, \celsius; the umidity index is provided as a percentage (0-100 \%) and the accuracy is 2-5 \%. It has been decided to poll the sensor each 2 seconds dues to the low sampling rate, which is 0.5 Hz. Even if it's better then the DHT11, this sensor is still not so accurate and responsive but sufficient for the project scope. 
+The DHT22 sensor is well-known and widely used in this kind of projects. It can provide two different measurements and is more accurate than is predecessor DHT11. In fact, the temperature range which can be detected goes from -40 to 125\, \celsius\ with an accuracy of 0.5\, \celsius; the humidity index is provided as a percentage (0-100 \%) and the accuracy is 2-5 \%. It has been decided to poll the sensor each 2 seconds, matching the maximum sampling rate of 0.5 Hz. Even if it's better then the DHT11, this sensor is still not very accurate and responsive but sufficient for the project scope. 
 
 \subsection{MMA8451 triple axis accelerometer}
-The MMA8451 is a small accelerometer able to analyze three axis with a resolution of 14 bit. The maximum refresh rate can reach up to 800 Hz with a precision of approx. 1 / 10 000 g. The device comes with some embedded functions which can be customized by the developer: the most interesting one is the possibility to change between the normal polling mode and the interrupt one. In the first one, data is detected whenever explicitly required while in the second one, an interrupt is generated when movement is detected. The accelerometer communicate using I\textsuperscript{2}C digital output interface. In the proposed project, the device is queried each 250 ms.
+The MMA8451 is a small accelerometer able to analyze three axis with a resolution of up to 14 bit. The maximum refresh rate can reach up to 800 Hz with a precision of approximately 1 / 10 000 g. The device comes with some embedded functions which can be customized by the developer: the most interesting one is the possibility to change between the normal polling mode and the interrupt one. In the first one, data is detected whenever explicitly required while in the second one, an interrupt is generated when movement is detected. The accelerometer communicates using I\textsuperscript{2}C digital output interface. In the proposed project, the device is queried every 250 ms in polling mode.
 
 \section{Software}
 This section describes the software projects developed during the project starting from the node and going through to the user interface.
@@ -66,7 +66,7 @@ The following defines can be used to customize the behavior of the sensor nodes:
 \begin{description}
 \item[SERIAL\_DEBUG] Disables ZigBee and uses the UART port as a debugging and logging interface instead (see sub section~\ref{subsec:uart}). This is helpful during development and for testing the sensors.
 \item[ENABLE\_SECURITY] Enables the use of the security layer (see section~\ref{sec:security}). This causes much longer startup times due to potential issues with entropy generation (see sub section~\ref{subsec:entropy}).
-\item[ZIGBEE\_RETRY] Enables a package retry logic for sending data packets. This can cause some delays if a sensor with a high output data rate is connected.
+\item[ZIGBEE\_RETRY] Enables a package retry logic for sending data packets. This can cause some delays if a sensor with a high output data rate is connected and the network is unreliable.
 \end{description}
 
 The sensor project has been implemented using the \href{https://platformio.org/}{PlatformIO development platform}. This IDE supports over 700 embedded platforms and relies on Visual Studio Code for the editor and code completion. It also manages the binary upload and supports logging through the serial port. The built in library manager gives simple access to thousands of open source libraries, most of them supporting the Arduino platform. It also restores these libraries from the internet when needed so it can be excluded from the source repository.
@@ -92,20 +92,20 @@ During this mode the sensor will read all available sensors and send the data to
 If the transmission fails for more than 10s the node goes back into the handshake state.
 
 \subsection{Router}\label{subsec:router}
-The router is implemented in Python using the digi-xbee and requests library. It's only job is to connect to the coordinator (see section~\ref{sec:coordinator}) via the serial port and translate between ZigBee and the REST interface implemented in the dashboard (see sub section~\ref{subsec:api}).
+The router is implemented in Python using the digi-xbee and requests library. Its sole job is to connect the coordinator (see section~\ref{sec:coordinator}) via the serial port and translate between ZigBee packets and the REST interface implemented in the dashboard (see sub section~\ref{subsec:api}).
 
 \subsection{Dashboard}
-All the data coming from sensors can be seen in different charts integrated into a fresh web dashboard. The realization of such interface rely on an open source project called \href{https://github.com/app-generator/flask-argon-dashboard}{Flask Argon Dashboard}, which is released under MIT License. Many functions can be found on this project: user authentication mechanisms and admin tools are just some examples in addition of a multitude of different template plots and graphs. For the aim of this project, all those tools were too much and the majority of them has been cut off in favor of a cleaner interface.
+All the data coming from sensors can be seen in different charts integrated into a fresh web dashboard. The implementation of this interface relies on an open source project called \href{https://github.com/app-generator/flask-argon-dashboard}{Flask Argon Dashboard}, which is released under MIT License. Many functions can be found on this project: user authentication mechanisms and admin tools are just some examples in addition of a multitude of different template plots and graphs. For the aim of this project, all those tools were too much and the majority of them has been cut off in favor of a cleaner interface.
 
-The decision of adopting this dashboard comes from how the interface itself has been developed: since is coded in \href{https://palletsprojects.com/p/flask/}{Python Flask} and well integrated with SQLite database and SQLAlchemy ORM (see \ref{subsec:database}), the setup it's been faster and more efficient since it was aligned with the design decisions that has been taken at the early stages of the project discussion.
+The decision of adopting this dashboard comes from how the interface itself has been developed: since is coded in \href{https://palletsprojects.com/p/flask/}{Python Flask} and well integrated with SQLite database and SQLAlchemy ORM (see sub section~\ref{subsec:database}), the setup it's been faster and more efficient since it was aligned with the design decisions that has been taken at the early stages of the project discussion.
 
-After the graphical adjustments of the dashboard, API development (see \ref{subsec:api}) and charts creation has been the only missing pieces in order to get the final result. As already integrated by Argon Dashboard, charts are based on the famous \href{https://www.chartjs.org/}{Chart.js}, which has been properly adjusted in order to visualize in the more effective way data coming from different sensors (using different colors) and multi-axix (for humidity and temperature sensor).
+After the graphical adjustments of the dashboard, API development (see sub section~\ref{subsec:api}) and charts creation has been the only missing pieces in order to get the final result. As already integrated by Argon Dashboard, charts are based on the famous \href{https://www.chartjs.org/}{Chart.js}, which has been properly adjusted in order to visualize in the more effective way data coming from different sensors (using different colors) and multi-axis (for humidity and temperature sensor).
 
 \subsection{Database}\label{subsec:database}
 Since SQLite and SQLAlchemy has always been a winning couple when associated with Python Flask, the triad has been chosen.
-\href{https://www.sqlalchemy.org/}{SQLAlchemy} is an Object Relational Mapper which permit to handle in a more flexible and comprehensive way database, creating a sort of abstraction level in between the web server and the database itself. \href{https://www.sqlite.org/index.html}{SQLite} has been the easier, effective and fast open source SQL database engine which works perfectly together with SQLAlchemy.
+\href{https://www.sqlalchemy.org/}{SQLAlchemy} is an Object Relational Mapper which permit to handle in a more flexible and comprehensive way database, creating a sort of abstraction level in between the web server and the database itself. \href{https://www.sqlite.org/index.html}{SQLite} has been chosen for its simplicity and efficiency without the need for an installation. The open source relational database engine works perfectly together with SQLAlchemy.
 
-The database structure has been divided into two different tables: the first one is the \textbf{Node} table, where sensor serial number are associated with an internal ID, while in the second table (called \textbf{Measurement}) incoming stats are stored with timestamp, type of measurement and origin sensor.
+The database structure has been divided into two different tables: the first one is the \textbf{Node} table, where sensor serial number are associated with an internal ID and the public key, while in the second table (called \textbf{Measurement}) stores incoming statistics with timestamp, type of measurement and origin sensor.
 
 \subsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
@@ -118,7 +118,7 @@ Registers a sensor node in the database using the Xbee serial number as the uniq
 \subsubsection*{Request parameters}
 \begin{description}
 \item[serial] Xbee serial number in HEX (unique node identifier)
-\item[public key] Used to enforce authentication 
+\item[publicKey] Used to enforce authentication 
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -146,7 +146,7 @@ Stores a measurement for a given node pushing it into the database.
     \item \textbf{type} Sensor type (uint8)
     \item \textbf{value} Array of sensor values
 \end{itemize}
-\item[Signature]
+\item[signature] ECDSA signature
 \end{description}
 
 \subsubsection*{Response parameters}
@@ -157,8 +157,6 @@ No content.
 \item[204 No content] Measurement recorded successful
 \item[400 Invalid request] Invalid sensor type or sensor serial
 \end{description}
-
-
 
 \subsubsection{Read measurements}
 Reads measurement from the database.
@@ -211,7 +209,7 @@ All data packets are expected to be of the form \texttt{DATA(serialNr, packetInd
 \end{itemize}
 
 \part{Results}
-% Simulation results (for simulation-based projects) and measurements (testbed-based projects).
+
 
 \part{Implementation limitations and challenges}
 \section{Hardware challenges}
