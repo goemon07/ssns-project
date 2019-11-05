@@ -201,11 +201,11 @@ cNonce + sNonce + serial)}
 During the handshake, the encryption mode is AES-128 with ECB and a 0-IV. Since the nonces are only 32bit each and are purely random data this is secure. The encryption of the nonces is theoretically not necessary, but it's used to prevent a MITM from modifying the handshake, since the encrypted nonce is expected to be only 32bit in length and the rest of the block is padded with 0 bits.
 
 \subsection{Data transmission}
-All data packets are expected to be of the form \texttt{DATA(serialNr, packetIndex, \{ measurements \})} using AES-128 in CTR mode. The IV is XORed with \texttt{packetIndex << 16}, which achieves multiple goals:
+All data packets are expected to be of the form \texttt{DATA(serialNr, packetIndex, \{ measurements \})} using AES-128 in CTR mode. The IV is XORed with \texttt{packetIndex << 8}, which achieves multiple goals:
 
 \begin{itemize}
 \item The use of a deterministic (yet non-repeated) IV ensures that the IV does not have to be sent to the server, thus saving 16 byte of data per packet
-\item Shifting the packetIndex by 16 bytes leaves the lower 16 bytes for use in the CTR operation mode, guaranteeing that no two blocks have the same key stream
+\item Shifting the packetIndex by 8 bytes leaves the lower 8 bytes for use in the CTR operation mode, guaranteeing that no two blocks have the same key stream
 \end{itemize}
 
 \part{Results}
