@@ -15,7 +15,7 @@
 \part{Introduction}
 The aim of the assigned project is to create a monitor tool capable to collect data from different sensors and show them into a web application.
 Nodes of the developed Wireless Sensor Network are equipped with two different kind of sensors: an accelerometer, which is able to detect vibrations, and a humidity and temperature sensor.
-Arduino UNO is used for nodes and the boarder router of the network, while a XBee shield is attached to it as an external radio in order to establish communications.
+Arduino UNO is uss<sed for nodes and the boarder router of the network, while a XBee shield is attached to it as an external radio in order to establish communications.
 Data collected by border router are stored into a database and shown on a dashboard using a Python Flask web server.
 
 \part{Network design}
@@ -97,7 +97,7 @@ The router is implemented in Python using the digi-xbee and requests library. It
 \subsection{Dashboard}
 All the data coming from sensors can be seen in different charts integrated into a fresh web dashboard. The implementation of this interface relies on an open source project called \href{https://github.com/app-generator/flask-argon-dashboard}{Flask Argon Dashboard}, which is released under MIT License. Many functions can be found on this project: user authentication mechanisms and admin tools are just some examples in addition of a multitude of different template plots and graphs. For the aim of this project, all those tools were too much and the majority of them has been cut off in favor of a cleaner interface.
 
-The decision of adopting this dashboard comes from how the interface itself has been developed: since is coded in \href{https://palletsprojects.com/p/flask/}{Python Flask} and well integrated with SQLite database and SQLAlchemy ORM (see sub section~\ref{subsec:database}), the setup it's been faster and more efficient since it was aligned with the design decisions that has been taken at the early stages of the project discussion.
+The decision of adopting this dashboard comes from how the interface itself has been developed: since is coded in \href{https://palletsprojects.com/p/flask/}{Python Flask} and well integrated with SQLite database and SQLAlchemy ORM (see sub section~\ref{subsec:database}), the setup it's been faster and more efficient thanks to the alignment with the design decisions that has been taken at the early stages of the project discussion.
 
 After the graphical adjustments of the dashboard, API development (see sub section~\ref{subsec:api}) and charts creation has been the only missing pieces in order to get the final result. As already integrated by Argon Dashboard, charts are based on the famous \href{https://www.chartjs.org/}{Chart.js}, which has been properly adjusted in order to visualize in the more effective way data coming from different sensors (using different colors) and multi-axis (for humidity and temperature sensor).
 
@@ -105,7 +105,7 @@ After the graphical adjustments of the dashboard, API development (see sub secti
 Since SQLite and SQLAlchemy has always been a winning couple when associated with Python Flask, the triad has been chosen.
 \href{https://www.sqlalchemy.org/}{SQLAlchemy} is an Object Relational Mapper which permit to handle in a more flexible and comprehensive way database, creating a sort of abstraction level in between the web server and the database itself. \href{https://www.sqlite.org/index.html}{SQLite} has been chosen for its simplicity and efficiency without the need for an installation. The open source relational database engine works perfectly together with SQLAlchemy.
 
-The database structure has been divided into two different tables: the first one is the \textbf{Node} table, where sensor serial number are associated with an internal ID and the public key, while in the second table (called \textbf{Measurement}) stores incoming statistics with timestamp, type of measurement and origin sensor.
+The database structure has been divided into two different tables: the first one is the \textbf{Node} table, where sensor serial number are associated with an internal ID and the public key, while the second one (called \textbf{Measurement}) stores incoming statistics with timestamp, type of measurement and origin sensor.
 
 \subsection{API}\label{subsec:api}
 The dashboard implements the following Web API, accepting requests in JSON to the specified endpoints.
