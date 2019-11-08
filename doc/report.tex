@@ -190,10 +190,10 @@ During the deployment the server's public key is written to the sensor nodes' fl
 The sensor first enters the key establishment phase, consisting of the following steps:
 \begin{enumerate}
 \item Generate ECC keypair using secp256k1 curve and store in EEPROM (only on first boot)
-\item Calculate shared secret using \texttt{SHA256(ECDH(privateKey, serverKey))[:16]}
+\item Calculate shared secret using \texttt{SK := SHA256(ECDH(privateKey, serverKey))[:16]}
 \item Generate 32bit nonce \texttt{cNonce}
-\item Send \texttt{HELO(serialNr, publicKey, {cNonce})}
-\item Server checks the node, stores the public key, generates the same shared secret and a nonce (\texttt{sNonce}) and replies with \texttt{HELO({sNonce})}
+\item Send \texttt{HELO(serialNr, publicKey, \{cNonce\}\textsubscript{SK})}
+\item Server checks the node, stores the public key, generates the same shared secret and a nonce (\texttt{sNonce}) and replies with \texttt{HELO(\{sNonce\}\textsubscript{SK})}
 \item Both sides derive the DK and IV to use with \texttt{DK, IV = HMAC-SHA256(HK,
 cNonce + sNonce + serial)}
 \end{enumerate}
